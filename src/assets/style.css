@@ -31,7 +31,6 @@ body {
 
 #app {
   width: 100%;
-  max-width: 1200px;
   padding: 2rem;
   display: flex;
   flex-direction: column;
