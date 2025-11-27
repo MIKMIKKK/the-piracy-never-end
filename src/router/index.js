@@ -1,15 +1,27 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
-// import OctoGame from '../components/OctoGame.vue'
-import HomePage from '../components/HomePage.vue'
-
-const routes = [
-  { path: '/', name: 'Home', component: HomePage },
-  // { path: '/game', name: 'OctoGame', component: OctoGame }
-]
+import { createRouter, createWebHistory } from 'vue-router'
+import LandingPage from '../components/LandingPage.vue'
+import FullGame from '../components/FullGame.vue'
+import WheelOnly from '../components/WheelOnly.vue'
 
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
-  routes,
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'landing',
+      component: LandingPage
+    },
+    {
+      path: '/game',
+      name: 'game',
+      component: FullGame
+    },
+    {
+      path: '/wheel',
+      name: 'wheel',
+      component: WheelOnly
+    }
+  ]
 })
 
 export default router

@@ -31,7 +31,11 @@
             <li v-for="(player, index) in players" :key="player.id" 
                 :class="{ active: index === currentPlayerIndex }">
               <span class="player-name">{{ player.name }}</span>
-              <span class="player-score">{{ player.score }} pts</span>
+              <div class="score-controls">
+                <button class="btn-score minus" @click.stop="adjustScore(player, -1)">-</button>
+                <span class="player-score">{{ player.score }} pts</span>
+                <button class="btn-score plus" @click.stop="adjustScore(player, 1)">+</button>
+              </div>
             </li>
           </ul>
         </aside>
@@ -54,48 +58,12 @@
               <!-- Text removed as requested -->
             </div>
             <div class="wheel-center" :style="{ backgroundImage: `url(${rond1})` }"></div>
-            <button class="spin-btn" @click="spinWheel" :disabled="isSpinning || gamePhase !== 'PLAYING'">
-              <span v-if="!isSpinning">SPIN</span>
-              <span v-else>...</span>
-            </button>
-
-            <!-- Debug Overlay -->
-            <svg v-if="showDebug" class="wheel-svg" viewBox="0 0 400 400" style="opacity: 0.7; pointer-events: none; z-index: 5;">
-              <g :transform="`rotate(${logicalOffset}, 200, 200)`">
-                <g v-for="(segment, index) in wheelSegments" :key="index"
-                   :transform="`rotate(${index * segmentAngle}, 200, 200)`">
-                  <path :d="getSegmentPath()" 
-                        :fill="getSegmentColor(segment.type)" 
-                        stroke="white" stroke-width="2" />
-                  <text x="250" y="80" 
-                        text-anchor="middle" 
-                        :transform="`rotate(${segmentAngle/2}, 200, 200)`"
-                        fill="white"
-                        font-weight="bold"
-                        font-size="10">
-                    {{ index }}
-                  </text>
-                </g>
-              </g>
-            </svg>
+            <button class="spin-btn" @click="spinWheel" :disabled="isSpinning || gamePhase !== 'PLAYING'"></button>
           </div>
+          <div class="spin-instruction">CLICK TO SPIN</div>
         </div>
 
         <!-- Debug Controls -->
-        <div class="debug-controls">
-          <button @click="showDebug = !showDebug" class="btn-secondary" style="margin-bottom: 10px;">
-            {{ showDebug ? 'Hide Debug' : 'Show Debug' }}
-          </button>
-          <div v-if="showDebug" class="debug-panel">
-            <label>
-              Logical Offset: {{ logicalOffset }}deg
-              <input type="range" min="0" max="360" v-model.number="logicalOffset" style="width: 100%;">
-            </label>
-            <div class="detected-winner">
-              Detected: <strong>{{ detectedWinner?.type || 'None' }}</strong>
-            </div>
-          </div>
-        </div>
 
 
 
@@ -129,25 +97,25 @@
         <div class="card" :class="{ flipped: isCardFlipped }">
           
           <!-- FRONT -->
-          <div class="card-face card-front">
+          <div class="card-face card-front" :class="currentQuestion.difficulty.toLowerCase()">
             <div class="difficulty-badge" :class="currentQuestion.difficulty.toLowerCase()">
               {{ currentQuestion.difficulty }}
             </div>
             
             <!-- Bonus Instruction -->
             <div v-if="currentQuestion.difficulty === 'BONUS'" class="bonus-instruction">
-              <p><strong>BONUS!</strong> Piochez une carte bonus (IRL) !</p>
+              <p><strong>BONUS!</strong> Draw a bonus card (IRL)!</p>
             </div>
 
             <h3 class="question-text">{{ currentQuestion.question }}</h3>
             <button class="btn-primary reveal-btn" @click="isCardFlipped = true">
-              Afficher la réponse
+              Reveal Answer
             </button>
           </div>
 
           <!-- BACK -->
-          <div class="card-face card-back">
-            <h3>Réponse</h3>
+          <div class="card-face card-back" :class="currentQuestion.difficulty.toLowerCase()">
+            <h3>Answer</h3>
             <p class="answer-text">{{ currentQuestion.answer }}</p>
             
             <div class="resolution-controls">
@@ -202,25 +170,55 @@ import rouletteWheel from '@/assets/test.png';
 // --- Game Data ---
 const QUESTIONS = {
   SOFT: [
-    { q: "What does HTML stand for?", a: "HyperText Markup Language" },
-    { q: "Which tag is used for the largest heading?", a: "<h1>" },
-    { q: "What is the CSS property to change text color?", a: "color" },
-    { q: "In Vue, how do you bind a variable to text?", a: "{{ variable }} or v-text" },
-    { q: "What is the correct HTML element for inserting a line break?", a: "<br>" }
+    { q: "What is a brand identity?", a: "The visible elements of a brand, like colors, logo, and design that identify it." },
+    { q: "What is the difference between primary and secondary brand colors?", a: "Primary are constant and central; secondary can change for campaigns or trends." },
+    { q: "What is a color palette?", a: "A set of colors used consistently in a brand’s visual design." },
+    { q: "What is a font?", a: "A specific style used for letters and numbers." },
+    { q: "What is a dynamic logo?", a: "A logo that changes to reflect events or news." },
+    { q: "What is a vector graphic?", a: "A graphic that can be scaled indefinitely without losing quality." },
+    { q: "What is a raster graphic?", a: "An image made of pixels that can become pixelated when enlarged." },
+    { q: "What is a wordmark?", a: "Stylized text used as part of a brand’s logo." },
+    { q: "What are primary brand colors?", a: "Main colors that are central to a brand’s visual identity." },
+    { q: "What are secondary brand colors?", a: "Additional colors that can change for marketing or trends." },
+    { q: "What is typography?", a: "The font styles, sizes, and spacing used in text design." },
+    { q: "What is a trademark?", a: "A legally registered symbol or word representing a company or product." },
+    { q: "What is a design element?", a: "Visual parts that make up brand identity: fonts, logos, colors." },
+    { q: "What is scalability in graphics?", a: "The ability for a graphic to look good at any size." },
+    { q: "What is the smallest unit of a digital image?", a: "A pixel." }
   ],
   MEDIUM: [
-    { q: "What is the difference between let and const?", a: "const cannot be reassigned, let can." },
-    { q: "What is a Vue computed property?", a: "A property that is cached based on its reactive dependencies." },
-    { q: "Explain the box model.", a: "Content, Padding, Border, Margin." },
-    { q: "How do you center a div horizontally and vertically with Flexbox?", a: "justify-content: center; align-items: center;" },
-    { q: "What does API stand for?", a: "Application Programming Interface" }
+    { q: "What does DPI stand for?", a: "Dots Per Inch – number of dots a printer can print per inch." },
+    { q: "What does PPI stand for?", a: "Pixels Per Inch – number of pixels per inch on a screen or image." },
+    { q: "Why is consistent typography important in branding?", a: "It reinforces brand identity and professionalism." },
+    { q: "What is brand architecture?", a: "Defines roles of each brand and guides relationships between brands." },
+    { q: "How does a scalable vector graphic differ from a raster image?", a: "Vectors can resize without losing quality; raster images pixelate when enlarged." },
+    { q: "What is the purpose of a style guide?", a: "To provide rules for colors, fonts, logos, and visual identity." },
+    { q: "How is a dynamic logo different from a regular logo?", a: "It changes to reflect events or news; regular logos are static." },
+    { q: "What is the difference between DPI and PPI?", a: "DPI relates to print; PPI relates to digital screen resolution." },
+    { q: "What is the role of design elements in a brand style guide?", a: "To define visual components like fonts, colors, and logos." },
+    { q: "Why is a color palette important?", a: "It creates visual consistency and reinforces brand recognition." },
+    { q: "What is a wordmark used for?", a: "To represent the brand name in stylized text." },
+    { q: "How do trademarks protect a brand?", a: "They legally protect symbols or words from being copied." },
+    { q: "What is a design element hierarchy?", a: "Organizing elements by importance for visual clarity." },
+    { q: "What is the difference between vector and raster file formats?", a: "Vectors are usually .pdf/.svg; rasters are .jpg/.png/.gif." },
+    { q: "How does consistency in brand style guide affect marketing?", a: "Ensures a recognizable and professional brand image across platforms." }
   ],
   HARD: [
-    { q: "What is the event loop in JavaScript?", a: "Mechanism that handles async callbacks." },
-    { q: "Explain Vue's reactivity system (Proxies).", a: "Vue 3 uses Proxies to intercept object access/mutation." },
-    { q: "What is the difference between local storage and session storage?", a: "Local persists forever, Session clears on tab close." },
-    { q: "What is a closure in JavaScript?", a: "A function remembering its lexical scope even when executed outside it." },
-    { q: "Explain SSR vs CSR.", a: "Server-Side Rendering vs Client-Side Rendering." }
+    { q: "Explain why scalable vector graphics are preferred for logos.", a: "They maintain sharpness at any size, from business cards to billboards." },
+    { q: "What is the difference between brand identity and brand image?", a: "Identity is how the brand is designed; image is how it’s perceived by consumers." },
+    { q: "Why are secondary brand colors useful in marketing campaigns?", a: "They allow flexibility and adaptation to trends without changing main identity." },
+    { q: "How does a brand style guide help maintain brand consistency?", a: "By defining rules for logos, fonts, colors, and visual elements." },
+    { q: "Explain the concept of brand architecture with an example.", a: "Shows relationship between main brand and sub-brands, e.g., Coca-Cola, Diet Coke, Cherry Coke." },
+    { q: "What is a pixel and why is it important in digital design?", a: "Smallest unit of digital image; affects clarity and resolution." },
+    { q: "How does DPI affect printed material quality?", a: "Higher DPI means more dots per inch, sharper print." },
+    { q: "How can typography influence brand perception?", a: "Fonts communicate style, tone, and professionalism." },
+    { q: "Why is a dynamic logo strategically useful?", a: "Allows the brand to engage with events, trends, or news creatively." },
+    { q: "How do vector and raster images affect scalability?", a: "Vectors scale infinitely without loss; raster images degrade." },
+    { q: "What is a style guide’s role in global branding?", a: "Ensures consistent brand identity across all regions and media." },
+    { q: "How does color palette choice impact brand recognition?", a: "Consistent use of colors makes the brand easily identifiable." },
+    { q: "What is the difference between a trademark and a logo?", a: "Trademark is legally registered; a logo is a visual representation." },
+    { q: "Explain why consistency in design elements is crucial.", a: "Maintains professionalism, recognizability, and brand trust." },
+    { q: "How does pixel density (PPI) affect digital displays?", a: "Higher PPI gives sharper, clearer images on screens." }
   ]
 
 };
@@ -273,18 +271,6 @@ const currentQuestion = ref(null);
 
 const isCardFlipped = ref(false);
 
-// Debug State
-const showDebug = ref(false);
-const logicalOffset = ref(0);
-
-const segmentAngle = computed(() => 360 / wheelSegments.length);
-
-const detectedWinner = computed(() => {
-  const normalizedRotation = wheelRotation.value % 360;
-  const angleUnderPointer = (360 - normalizedRotation + logicalOffset.value) % 360;
-  const segmentIndex = Math.floor(angleUnderPointer / segmentAngle.value);
-  return wheelSegments[segmentIndex];
-});
 
 const isDrawingCard = ref(false);
 const deckRefs = ref({});
@@ -349,10 +335,10 @@ function spinWheel() {
 
 function handleSpinResult(rotation) {
   const normalizedRotation = rotation % 360;
-  const ROTATION_OFFSET = logicalOffset.value; 
+  const ROTATION_OFFSET = 0; 
   
   const angleUnderPointer = (360 - normalizedRotation + ROTATION_OFFSET) % 360;
-  const segmentIndex = Math.floor(angleUnderPointer / segmentAngle.value);
+  const segmentIndex = Math.floor(angleUnderPointer / 15); // 24 segments = 15deg each
   const winningSegment = wheelSegments[segmentIndex];
   
   const difficulty = winningSegment.type;
@@ -391,37 +377,18 @@ function triggerCardDraw() {
   isDrawingCard.value = true;
   
   // Play animation for 1.2s then show question
+  // Check if mobile (width < 768px)
+  if (window.innerWidth < 768) {
+    gamePhase.value = 'QUESTION';
+    return;
+  }
+
   setTimeout(() => {
     isDrawingCard.value = false;
     gamePhase.value = 'QUESTION';
   }, 1200);
 }
 
-function getSegmentColor(type) {
-  switch (type) {
-    case 'SOFT': return '#90EE90'; // Light Green
-    case 'MEDIUM': return '#87CEEB'; // Sky Blue
-    case 'HARD': return '#FF6347'; // Tomato Red
-    case 'BONUS': return '#FFD700'; // Gold
-    default: return '#CCCCCC';
-  }
-}
-
-function getSegmentPath() {
-  const angle = segmentAngle.value;
-  // Convert angle to radians
-  const rad = (angle * Math.PI) / 180;
-  // Center is 200,200. Radius 200.
-  // Start point is 200,0 (top center)
-  // End point:
-  const x = 200 + 200 * Math.sin(rad);
-  const y = 200 - 200 * Math.cos(rad);
-  
-  // Large arc flag is 0 for angles < 180
-  const largeArc = angle > 180 ? 1 : 0;
-  
-  return `M200,200 L200,0 A200,200 0 ${largeArc},1 ${x},${y} Z`;
-}
 
 function resolveTurn(correct) {
   if (correct) {
@@ -438,25 +405,41 @@ function resolveTurn(correct) {
   nextTurn();
 }
 
+function adjustScore(player, amount) {
+  player.score += amount;
+  if (player.score >= 15) {
+    winner.value = player;
+    gamePhase.value = 'GAME_OVER';
+  }
+}
+
 </script>
 
 <style scoped>
-:root {
-  --primary-color: #D4AF37;
-  --bg-color: #000000;
-  --card-bg: #1a1a1a;
-  --front-soft: #f29abb;
-  --front-medium: #dfdc08;
-  --front-hard: #594696;
+::before::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
+
 
 #home-root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  color: white;
-  font-family: 'Inter', sans-serif;
+  color: var(--text-color);
+  font-family: var(--font-main);
   overflow-x: hidden;
+  overflow-y: auto; /* Enable vertical scroll */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url(@/assets/grey_black_grunge.png);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-blend-mode: normal;
+  background-color: #000;
 }
 
 header {
@@ -464,8 +447,9 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(20, 20, 20, 0.8);
-  border-bottom: 1px solid var(--primary-color);
+  background: rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid var(--primary-color);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -502,12 +486,23 @@ h1 {
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--primary-color);
+  background: rgba(0,0,0,0.5);
+  border: 2px solid var(--primary-color);
   color: var(--primary-color);
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+}
+
+.btn-secondary:hover {
+  background: var(--primary-color);
+  color: black;
+  text-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 .btn-primary {
@@ -517,12 +512,19 @@ h1 {
   padding: 1rem 2rem;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.2s;
-  font-size: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 1.1rem;
+  font-family: var(--font-accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  clip-path: polygon(5% 0, 100% 0, 100% 85%, 95% 100%, 0 100%, 0 15%);
+  box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
 }
 
 .btn-primary:hover {
-  transform: scale(1.05);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px rgba(0,0,0,0.7);
+  filter: brightness(1.1);
 }
 
 /* SETUP */
@@ -553,17 +555,22 @@ h1 {
 }
 
 .scoreboard {
-  width: 250px;
-  background: rgba(255, 255, 255, 0.05);
-  border-right: 1px solid #333;
+  width: 300px;
+  background: rgba(0, 0, 0, 0.7);
+  border-right: 2px solid #333;
   padding: 2rem;
   flex-shrink: 0;
+  backdrop-filter: blur(2px);
 }
 
 .scoreboard h3 {
   color: var(--primary-color);
   margin-bottom: 1.5rem;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-main);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--primary-color);
+  padding-bottom: 0.5rem;
 }
 
 .scoreboard ul {
@@ -582,8 +589,48 @@ h1 {
 
 .scoreboard li.active {
   border-color: var(--primary-color);
-  background: rgba(212, 175, 55, 0.1);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+  border-left-width: 5px;
+}
+
+.score-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-score {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.btn-score:hover {
+  background: rgba(212, 175, 55, 0.2); /* Gold tint */
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  transform: scale(1.1);
+}
+
+.btn-score.minus:hover {
+  background: rgba(255, 68, 68, 0.2); /* Red tint */
+  border-color: #ff4444;
+  color: #ff4444;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
 }
 
 .roulette-section {
@@ -591,10 +638,11 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 2rem;
-  overflow: hidden; /* Prevent wheel overflow */
+  justify-content: flex-start; /* Move up */
+  gap: 1rem;
+  padding: 0 2rem; /* Remove top/bottom padding */
+  margin-top: -2rem; /* Force move up */
+  overflow: visible; /* Allow arrow to stick out if needed */
 }
 
 .turn-indicator {
@@ -606,7 +654,9 @@ h1 {
 .highlight {
   color: var(--primary-color);
   font-weight: bold;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-accent);
+  font-size: 1.2em;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.8);
 }
 
 /* WHEEL STYLES */
@@ -617,6 +667,7 @@ h1 {
   max-width: 95vw;
   max-height: 95vw;
   aspect-ratio: 1 / 1;
+  margin-top: -3rem; /* Move wheel up further */
 }
 
 .wheel {
@@ -705,7 +756,7 @@ h1 {
 .wheel-container::after {
   content: '';
   position: absolute;
-  top: -5px;
+  top: 15px; /* Move down to overlap/touch wheel */
   left: 50%;
   transform: translateX(-50%);
   width: 0;
@@ -719,22 +770,32 @@ h1 {
 
 .spin-btn {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20%; /* Responsive size */
-  height: 20%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle, #D4AF37, #8B6914);
-  border: 4px solid white;
-  color: black;
-  font-weight: 900;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  z-index: 20;
-  font-size: clamp(0.8rem, 2vw, 1.2rem);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 30; /* Above everything else */
+  opacity: 0; /* Invisible */
+}
+
+.spin-instruction {
+  margin-top: 1rem;
+  font-family: var(--font-accent);
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  animation: pulseText 2s infinite;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+@keyframes pulseText {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
 .spin-btn:disabled {
@@ -792,6 +853,14 @@ h1 {
   justify-content: center;
 }
 
+/* Override global modal-content styles for the question modal */
+.question-modal .modal-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 .rules-content {
   background: black;
   padding: 2rem;
@@ -827,22 +896,32 @@ h1 {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  border: 2px solid var(--primary-color);
-  background: #111;
+  border: none; /* Remove border */
+  border-radius: 25px; /* Rounded corners */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  font-size: 2rem;
   padding: 2rem;
   text-align: center;
-  box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); /* Softer shadow */
   overflow-y: auto; /* Allow scrolling if content is long */
+  color: white; /* Default white text */
+  background-blend-mode: multiply;
+  background-size: cover;
 }
 
 .card-back {
   transform: rotateY(180deg);
-  background: #222;
+  color: white;
 }
+
+/* Specificity fix: Define these AFTER card-back */
+.card-face.soft { background-color: var(--soft) !important; }
+.card-face.medium { background-color: var(--medium) !important; }
+.card-face.hard { background-color: var(--hard) !important; }
+.card-face.bonus { background-color: var(--hard) !important; }
 
 .difficulty-badge {
   padding: 0.5rem 1rem;
@@ -880,11 +959,12 @@ h1 {
   font-size: clamp(1.2rem, 3vw, 1.5rem);
   line-height: 1.4;
   margin-bottom: 2rem;
+  color: white;
 }
 
 .answer-text {
   font-size: clamp(1rem, 2.5vw, 1.2rem);
-  color: #D4AF37;
+  color: white;
   margin-bottom: 2rem;
 }
 
@@ -928,8 +1008,8 @@ h1 {
 /* DECK SECTION */
 .deck-section {
   width: 250px;
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 1px solid #333;
+  background: rgba(0, 0, 0, 0.7);
+  border-left: 2px solid #333;
   padding: 2rem;
   flex-shrink: 0;
   display: flex;
@@ -943,7 +1023,7 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5rem;
+  gap: 8rem; /* Increased gap */
 }
 
 .deck {
@@ -989,11 +1069,12 @@ h1 {
 }
 
 .deck-label {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-accent);
   color: var(--primary-color);
   font-weight: bold;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+  font-size: 1.2rem;
 }
 
 .deck-label.beginner { color: #D4AF37; }
@@ -1043,86 +1124,172 @@ h1 {
 
 /* GAME OVER STYLES */
 .game-over-content {
-  background: black;
-  border: 4px solid var(--primary-color);
-  padding: 3rem;
+  background: linear-gradient(145deg, #1a1a1a, #000000), url(@/assets/grey_black_grunge.png);
+  background-blend-mode: overlay;
+  background-size: cover;
+  border-radius: 25px;
+  padding: 4rem 2rem;
   text-align: center;
-  max-width: 500px;
-  box-shadow: 0 0 50px var(--primary-color);
-  animation: victoryPulse 2s infinite;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 60px rgba(223, 220, 8, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
 }
 
 .game-over-content h2 {
-  font-size: 3rem;
+  font-size: 4rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin: 0;
   font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 10px;
+  text-shadow: 0 0 20px rgba(223, 220, 8, 0.5);
+  line-height: 1;
 }
 
 .winner-announcement {
-  margin-bottom: 2rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .winner-name {
-  font-size: 2.5rem;
-  font-weight: bold;
+  font-size: 3rem;
+  font-weight: 900;
   color: white;
-  display: block;
-  margin-bottom: 1rem;
+  text-transform: uppercase;
+  font-family: var(--font-accent);
+  letter-spacing: 2px;
+}
+
+.winner-announcement p {
+  font-size: 1.2rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.game-over-content .btn-primary {
+  margin-top: 1rem;
+  width: auto;
+  min-width: 200px;
+  font-size: 1.5rem;
+  padding: 1rem 3rem;
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 15px rgba(223, 220, 8, 0.2);
+}
+
+.game-over-content .btn-primary:hover {
+  background: var(--primary-color);
+  color: black;
+  box-shadow: 0 0 30px rgba(223, 220, 8, 0.6);
+  transform: scale(1.05);
 }
 
 @keyframes victoryPulse {
-  0% { box-shadow: 0 0 30px var(--primary-color); }
-  50% { box-shadow: 0 0 60px var(--primary-color); }
-  100% { box-shadow: 0 0 30px var(--primary-color); }
+  0% { box-shadow: 0 0 30px rgba(223, 220, 8, 0.2); border-color: rgba(223, 220, 8, 0.2); }
+  50% { box-shadow: 0 0 60px rgba(223, 220, 8, 0.5); border-color: rgba(223, 220, 8, 0.5); }
+  100% { box-shadow: 0 0 30px rgba(223, 220, 8, 0.2); border-color: rgba(223, 220, 8, 0.2); }
 }
 
 @media (max-width: 768px) {
+  /* Mobile Header */
   header {
     flex-direction: column;
     text-align: center;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .title-img {
+    height: 80px; /* Smaller logo */
   }
 
   .game-layout {
     flex-direction: column;
+    gap: 2rem;
   }
 
+  /* Grid Scoreboard (2 per row) */
   .scoreboard {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid var(--primary-color);
     padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
   }
   
+  .scoreboard h3 {
+    display: none; 
+  }
+
   .scoreboard ul {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
     gap: 1rem;
-    justify-content: center;
     width: 100%;
+    padding: 0;
   }
 
   .scoreboard li {
+    width: 100%;
+    min-width: 0; /* Allow shrinking */
     margin-bottom: 0;
-    flex: 1;
-    min-width: 120px;
-    justify-content: center;
-    gap: 0.5rem;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
+  .scoreboard li.active {
+    background: rgba(212, 175, 55, 0.2);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+  }
+
+  .player-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+  }
+
+  .player-score {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    font-family: var(--font-accent);
+  }
+
+  /* Roulette Section */
   .roulette-section {
     padding: 1rem;
+    margin-top: 0;
+  }
+
+  .turn-indicator {
+    font-size: 1.8rem; /* Larger text */
+    margin-bottom: 2rem;
   }
 
   .wheel-container {
-    width: 300px;
-    height: 300px;
+    width: 95vw;
+    height: 95vw;
+    max-width: 500px; /* Increased max size */
+    max-height: 500px;
+    margin-top: 0;
+  }
+  
+  .spin-instruction {
+    font-size: 2rem;
+    margin-top: 2rem;
   }
   
   .segment .label {
@@ -1160,31 +1327,4 @@ h1 {
 }
 
 
-.debug-controls {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.debug-panel {
-  background: rgba(0, 0, 0, 0.9);
-  border: 1px solid var(--primary-color);
-  padding: 1rem;
-  border-radius: 8px;
-  width: 250px;
-  color: white;
-}
-
-.detected-winner {
-  margin-top: 10px;
-  font-size: 1.2rem;
-  color: var(--primary-color);
-  text-align: center;
-  border-top: 1px solid #333;
-  padding-top: 10px;
-}
 </style>

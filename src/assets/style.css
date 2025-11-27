@@ -1,13 +1,17 @@
 :root {
   --bg-color: #000000;
   --text-color: #e2e8f0;
-  --primary-color: #D4AF37; /* Or */
+  --primary-color: #dfdc08; /* Or */
   --secondary-color: #ffffff;
   --accent-color: #ff0000;
   --glass-bg: rgba(20, 20, 20, 0.8);
   --glass-border: rgba(212, 175, 55, 0.3);
   --card-width: 200px;
   --card-height: 300px;
+  
+  --soft: #f29abb;
+  --medium: #dfdc08;
+  --hard: #594696;
 }
 
 * {
@@ -24,6 +28,7 @@ body {
   display: flex;
   justify-content: center;
   overflow-x: hidden;
+  overflow-y: hidden;
   background-image: 
     linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)),
     url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
@@ -31,10 +36,8 @@ body {
 
 #app {
   width: 100%;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
 }
 
 header {
@@ -471,4 +474,11 @@ main {
 
 .modal-content li strong {
   color: white;
+}
+
+
+@media (max-height: 768px) {
+  body {
+    overflow-y: auto !important;
+  }
 }
