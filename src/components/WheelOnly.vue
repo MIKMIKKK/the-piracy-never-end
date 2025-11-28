@@ -96,13 +96,20 @@
         <span class="close-modal" @click="showRules = false">&times;</span>
         <h2>Rules</h2>
         <div class="rules-container">
-          <h3>ROULETTE</h3>
-          <p>Spin the wheel to determine your destiny.</p>
+          <h3>GOAL</h3>
+          <p>Be the first player to reach <strong>15 points</strong> by answering questions.</p>
+
+          <h3>HOW TO PLAY</h3>
+          <p>Spin the wheel and face the challenge:</p>
           <ul>
-            <li><strong>BEGINNER:</strong> 1 Point. Easy questions.</li>
-            <li><strong>MEDIUM:</strong> 2 Points. Standard questions.</li>
-            <li><strong>HARD:</strong> 3 Points. Expert questions.</li>
+            <li><span style="color: #FFC0CB">●</span> <strong>EASY:</strong> +1 Point</li>
+            <li><span style="color: #800080">●</span> <strong>MEDIUM:</strong> +2 Points</li>
+            <li><span style="color: #FFD700">●</span> <strong>HARD:</strong> +3 Points</li>
           </ul>
+          <p>If you answer correctly, you gain the points. If wrong, you get <strong>0 points</strong>.</p>
+
+          <h3>BONUS CARDS</h3>
+          <p>Land on <strong>BONUS</strong> to draw special cards like <strong>Duel</strong>, <strong>Protection</strong>, or <strong>Double Points</strong>!</p>
         </div>
       </div>
     </div>
