@@ -804,9 +804,9 @@ h1 {
   .wheel-container {
     width: 95vw;
     height: 95vw;
-    max-width: 500px; /* Increased max size */
-    max-height: 500px;
-    margin-top: 0;
+    max-width: 95vw;
+    max-height: 95vw;
+    margin-top: 1rem;
   }
   
   .spin-instruction {
@@ -822,8 +822,10 @@ h1 {
 
 @media (max-width: 480px) {
   .wheel-container {
-    width: 280px;
-    height: 280px;
+    width: 125vw;
+    height: 125vw;
+    max-width: 125vw;
+    max-height: 125vw;
   }
 
   .card-container {

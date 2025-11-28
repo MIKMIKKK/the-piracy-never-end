@@ -5,7 +5,7 @@
         <img :src="logo" alt="DESIGNER'S" class="title-img top" />
       </div>
       <div class="header-controls">
-        <button id="rules-btn" class="btn-secondary" @click="showRules = true">Captain's Rules</button>
+        <button id="rules-btn" class="btn-secondary" @click="showRules = true">Rules</button>
         <button v-if="gamePhase !== 'SETUP'" class="btn-secondary" @click="resetGame">Reset Game</button>
       </div>
     </header>
@@ -144,15 +144,22 @@
     <div id="rules-modal" class="modal" :class="{ hidden: !showRules }" @click.self="showRules = false">
       <div class="modal-content rules-content">
         <span class="close-modal" @click="showRules = false">&times;</span>
-        <h2>Captain's Rules</h2>
+        <h2>Rules</h2>
         <div class="rules-container">
-          <h3>ROULETTE</h3>
-          <p>Spin the wheel to determine your destiny.</p>
+          <h3>GOAL</h3>
+          <p>Be the first player to reach <strong>15 points</strong> by answering questions.</p>
+
+          <h3>HOW TO PLAY</h3>
+          <p>Spin the wheel and face the challenge:</p>
           <ul>
-            <li><strong>BEGINNER:</strong> 1 Point. Easy questions.</li>
-            <li><strong>MEDIUM:</strong> 2 Points. Standard questions.</li>
-            <li><strong>HARD:</strong> 3 Points. Expert questions.</li>
+            <li><span style="color: #FFC0CB">●</span> <strong>EASY:</strong> +1 Point</li>
+            <li><span style="color: #800080">●</span> <strong>MEDIUM:</strong> +2 Points</li>
+            <li><span style="color: #FFD700">●</span> <strong>HARD:</strong> +3 Points</li>
           </ul>
+          <p>If you answer correctly, you gain the points. If wrong, you get <strong>0 points</strong>.</p>
+
+          <h3>BONUS CARDS</h3>
+          <p>Land on <strong>BONUS</strong> to draw special cards like <strong>Duel</strong>, <strong>Protection</strong>, or <strong>Double Points</strong>!</p>
         </div>
       </div>
     </div>
@@ -1325,8 +1332,10 @@ h1 {
 
   /* Roulette Section */
   .roulette-section {
-    padding: 1rem;
+    padding: 0.5rem;
     margin-top: 0;
+    width: 100%;
+    overflow: hidden; /* Prevent horizontal scroll */
   }
 
   .turn-indicator {
@@ -1337,9 +1346,9 @@ h1 {
   .wheel-container {
     width: 95vw;
     height: 95vw;
-    max-width: 500px; /* Increased max size */
-    max-height: 500px;
-    margin-top: 0;
+    max-width: 95vw;
+    max-height: 95vw;
+    margin-top: 1rem;
   }
   
   .spin-instruction {
@@ -1360,8 +1369,10 @@ h1 {
 
 @media (max-width: 480px) {
   .wheel-container {
-    width: 280px;
-    height: 280px;
+    width: 120vw;
+    height: 120vw;
+    max-width: 120vw;
+    max-height: 120vw;
   }
 
   .card-container {
@@ -1382,4 +1393,91 @@ h1 {
 }
 
 
+  /* Rules Modal Styling */
+  .rules-content {
+    background: linear-gradient(145deg, #1a1a1a, #000000);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+    max-width: 800px; /* Wider */
+    width: 90%;
+    padding: 3rem;
+  }
+
+  .rules-content h2 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 1rem;
+  }
+
+  .rules-container {
+    font-size: 1.2rem; /* Larger base font */
+    line-height: 1.8;
+    color: #e0e0e0;
+    text-align: left;
+  }
+
+  .rules-container h3 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .rules-container ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 1rem 0;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 10px;
+  }
+
+  .rules-container li {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+  }
+
+  .rules-container li:last-child {
+    margin-bottom: 0;
+  }
+
+  .rules-container strong {
+    color: white;
+    font-weight: bold;
+  }
+
+  /* Mobile Adjustments */
+  @media (max-width: 768px) {
+    .rules-content {
+      padding: 1.5rem;
+    }
+    
+    .rules-content h2 {
+      font-size: 2rem;
+    }
+
+    .rules-container {
+      font-size: 1rem;
+    }
+
+    .rules-container h3 {
+      font-size: 1.4rem;
+    }
+    
+    .rules-container li {
+      font-size: 1.1rem;
+    }
+  }
 </style>
